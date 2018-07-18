@@ -13,12 +13,16 @@ data = {
 		],
 }
 
+
 from collections import defaultdict
 
-thresholds = defaultdict(lambda: 2)
 datesbyperson = defaultdict(lambda: set())
 personbything = defaultdict(lambda: set())
 peopleanddatebything = {}
+
+thresholds = defaultdict(lambda: 2)
+required_attendees = defaultdict(lambda: [])
+required_attendees['thing1'].append("person4")
 
 """
 goal: figure out which combinations of people+date+thing would have the best attendance.
@@ -52,13 +56,20 @@ for thing, people in personbything.items():
 			peoplebydate[date].add(person)
 			
 	for date, people in peoplebydate.items():
+		num_required = len(required_attendees[thing])
+		num_required_available = len(people.intersection(required_attendees[thing]))
+		if num_required != num_required_available:
+			print "removing {} for {} because only {}/{} required attendees are available".format(date, thing, num_required_available, num_required)
+			del(peoplebydate[date])
+			continue
+	
 		if len(people) < thresholds[thing]:
 			print "removing {} for {} because only {} interest (min {})".format(thing, date, len(people), thresholds[thing])
 			del(peoplebydate[date])
 			continue
 			
 	if len(peoplebydate) == 0:
-		print "No dates where more than {} can do {}. Sadness.".format(thresholds[thing], thing)
+		print "no dates where more than {} can do {}. Sadness.".format(thresholds[thing], thing)
 		continue
 		
 	bestdates = sorted(peoplebydate, 
