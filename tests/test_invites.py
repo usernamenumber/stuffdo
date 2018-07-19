@@ -2,18 +2,21 @@ import invites
 import json
 
 base_data = {
-    'person1': [
-            ("date1", "date4"),
-            ("thing1", "thing3"),
-        ],
-    'person2': [
-            ("date1", "date2"),
-            ("thing1", "thing2"),
-        ],
-    'person3': [
-            ("date1", "date2", "date3"),
-            ("thing1", "thing2", "thing3", "thing4"),
-        ],
+    'person1': {
+            'dates':  ("date1", "date4"),
+            'events': ("thing1", "thing3"),
+            'notes':  '',
+    },
+    'person2': {
+            'dates':  ("date1", "date2"),
+            'events': ("thing1", "thing2"),
+            'notes':  '',
+    },
+    'person3': {
+            'dates':  ("date1", "date2", "date3"),
+            'events':  ("thing1", "thing2", "thing3", "thing4"),
+            'notes':  '',
+    },
 }
 
 def do_test(data, overrides, expected):
