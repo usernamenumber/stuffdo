@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict
 
 def all_viable_options(data, overrides={}):
@@ -12,8 +13,8 @@ def all_viable_options(data, overrides={}):
 		- collect people interested in thing, grouped by date
 		- remove thing if max(group_lens) < thresh
 	"""
-	dates_by_person = defaultdict(lambda: set())
-	people_by_thing = defaultdict(lambda: set())
+	dates_by_person = defaultdict(lambda: [])
+	people_by_thing = defaultdict(lambda: [])
 	date_and_people_by_thing = {}
 
 	# Minimum attendance for an option to be considered,
@@ -27,9 +28,9 @@ def all_viable_options(data, overrides={}):
 	required_attendees.update(overrides.get('required_attendees', {}))
 
 	for person, (dates, things) in data.items():
-		dates_by_person[person].update(dates)
+		dates_by_person[person] = dates
 		for thing in things:
-			people_by_thing[thing].add(person)
+			people_by_thing[thing].append(person)
 			
 	for thing, people in people_by_thing.items():
 		if len(people) < thresholds[thing]:
@@ -37,18 +38,18 @@ def all_viable_options(data, overrides={}):
 			del(people_by_thing[thing])
 			continue
 		
-		peoplebydate = defaultdict(lambda: set())
+		peoplebydate = defaultdict(lambda: [])
 		for person, dates in dates_by_person.items():
 			# faster than nested loop iterating through
 			# `people` for keys to get from datesby?
 			if person not in people:
 				continue
 			for date in dates:
-				peoplebydate[date].add(person)
+				peoplebydate[date].append(person)
 				
 		for date, people in peoplebydate.items():
 			num_required = len(required_attendees[thing])
-			num_required_available = len(people.intersection(required_attendees[thing]))
+			num_required_available = len(set(people).intersection(required_attendees[thing]))
 			if num_required != num_required_available:
 				print "removing {} for {} because only {}/{} required attendees are available".format(date, thing, num_required_available, num_required)
 				del(peoplebydate[date])
@@ -79,46 +80,10 @@ def print_options(date_and_people_by_thing):
 		for date, people in options:
 			print "  {} with {}: {}".format(date, len(people), '; '.join(people))
 
-def do_tests():
-	data = {
-		'person1': [
-				("date1", "date4"),
-				("thing1", "thing3"),
-			],
-		'person2': [
-				("date1", "date2"),
-				("thing1", "thing2"),
-			],
-		'person3': [
-				("date1", "date2", "date3"),
-				("thing1", "thing2", "thing3", "thing4"),
-			],
-	}
-
-	print "BASIC\n========"
-	print_options(all_viable_options(data))
-	print ""
-
-	print "MISSING REQUIRED ATTENDEE\n======="
-	overrides = {
-		'required_attendees': {
-			'thing1': ["person4",],
-		},
-	}
-	print_options(all_viable_options(data, overrides))
-	print ""
-
-	print "LOW THRESHOLD\n======="
-	overrides = {
-		'thresholds': {
-			'thing4': 1,
-		},
-	}
-	print_options(all_viable_options(data, overrides))
-	print ""
-
 
 
 if __name__ == '__main__':
-	# TODO: split tests into proper tests/ dir
-	do_tests()
+	# TODO: take actual input
+	from tests.test_invites import base_data
+	options = all_viable_options(base_data)
+	print_options(options)
