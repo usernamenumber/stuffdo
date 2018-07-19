@@ -22,7 +22,8 @@ def all_viable_options(data, overrides={}):
 	dates_by_person = defaultdict(lambda: [])
 	notes_by_person = defaultdict(lambda: [])
 	people_by_event = defaultdict(lambda: [])
-	date_and_people_by_event = {}
+	date_and_people_by_event = defaultdict(lambda: [])
+	event_and_people_by_date = defaultdict(lambda: [])
 
 	# Minimum attendance for an option to be considered,
 	# keyed by event.
@@ -75,27 +76,33 @@ def all_viable_options(data, overrides={}):
 		bestdates = sorted(peoplebydate, 
 			lambda a,b: cmp(len(peoplebydate[b]),len(peoplebydate[a])))
 			
-		date_and_people_by_event[event] = []
 		for date in bestdates:
 			date_and_people_by_event[event].append((date, peoplebydate[date]))
+			event_and_people_by_date[date].append((event, peoplebydate[date]))
 
-	return date_and_people_by_event
-		
-def print_options(date_and_people_by_event, include_emails=True):
+	return (date_and_people_by_event, event_and_people_by_date)
+
+def print_options(data_fn, overrides_fn=None, skip_notes=False, skip_emails=False):
+	data = data_from_file(data_fn)
+	overrides = file(overrides_fn).read() if overrides_fn else {}
+	date_and_people_by_event, event_and_people_by_date = all_viable_options(data)
+
 	print "==="
-	for event, options in date_and_people_by_event.items():
-		print "\n\nTop options for {}:".format(event)
-		for date, people in options:
-			line = "  {} with {}".format(date, len(people))
-			if include_emails:
+	for date, options in event_and_people_by_date.items():
+		print "\n\nTop options for {}:".format(date)
+		# Sort events by number of attendees
+		for event, people in sorted(options, lambda a,b: cmp(len(b[1]), len(a[1]))):
+			line = "  {} people for {}\t({} alternatives)".format(len(people), event, len(date_and_people_by_event[event]))
+			if not skip_emails:
 				line += ' ' + '; '.join(people)
 			print line
 
-def print_people_notes(data):
-	for person, response in data.items():
-		notes = response.get('notes', '')
-		if notes:
-			print "Notes for {}:\n  {}\n".format(person, "\n  ".join(notes.split("\n")))
+		if not skip_notes:
+			print "\n===\n"
+			for person, response in data.items():
+				notes = response.get('notes', '')
+				if notes:
+					print "Notes for {}:\n  {}\n".format(person, "\n  ".join(notes.split("\n")))
 
 def data_from_file(fn, delim='\t'):
 	data = {}
@@ -113,11 +120,9 @@ def data_from_file(fn, delim='\t'):
 if __name__ == '__main__':
 	argparser = ArgumentParser()
 	argparser.add_argument("--overrides", default=None)
+	argparser.add_argument("--no-emails", action='store_true')
+	argparser.add_argument("--no-notes",  action='store_true')
 	argparser.add_argument("fn")
 	args = argparser.parse_args()
 
-	data = data_from_file(args.fn)
-	overrides = file(args.overrides).read() if args.overrides else {}
-	options = all_viable_options(data)
-	print_options(options, include_emails=False)
-	print_people_notes(data)
+	print_options(args.fn, args.overrides, args.no_emails, args.no_notes)
