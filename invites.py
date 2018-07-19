@@ -84,12 +84,12 @@ def all_viable_options(data, overrides={}):
 
 def print_options(data_fn, overrides_fn=None, skip_notes=False, skip_emails=False):
 	data = data_from_file(data_fn)
-	overrides = file(overrides_fn).read() if overrides_fn else {}
-	date_and_people_by_event, event_and_people_by_date = all_viable_options(data)
+	overrides = json.loads(file(overrides_fn).read()) if overrides_fn else {}
+	date_and_people_by_event, event_and_people_by_date = all_viable_options(data, overrides)
 
 	print "==="
 	for date, options in event_and_people_by_date.items():
-		print "\n\nTop options for {}:".format(date)
+		print "Options for {}".format(date)
 		# Sort events by number of attendees
 		for event, people in sorted(options, lambda a,b: cmp(len(b[1]), len(a[1]))):
 			line = "  {} people for {}\t({} alternatives)".format(len(people), event, len(date_and_people_by_event[event]))
@@ -103,6 +103,7 @@ def print_options(data_fn, overrides_fn=None, skip_notes=False, skip_emails=Fals
 				notes = response.get('notes', '')
 				if notes:
 					print "Notes for {}:\n  {}\n".format(person, "\n  ".join(notes.split("\n")))
+		print ""
 
 def data_from_file(fn, delim='\t'):
 	data = {}
