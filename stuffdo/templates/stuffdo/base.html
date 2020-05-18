@@ -1,0 +1,18 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static 'stuffdo/main.css' %}" />    
+    <title>{% block title %}Let's make some plans!{% endblock %}</title>
+</head>
+
+<body class="body">
+    <div class='sidebar'>
+        <p>Sidebar</p>
+        <p>Content</p>
+    </div>
+    <div class='content'>
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
