@@ -1,4 +1,14 @@
 #!/usr/bin/python
+
+
+#####
+#####
+##### DEPRECATED
+##### replaced by scoring.py
+#####
+#####
+
+
 from argparse import ArgumentParser
 import json
 import re
